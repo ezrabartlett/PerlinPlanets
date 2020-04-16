@@ -1,0 +1,17 @@
+{
+  "name": "perlin-planets",
+  "version": "1.0.0",
+  "description": "Randomly generated planets based on perlin noise",
+  "main": "PerlinPlanets.js",
+  "dependencies": {
+    "dat.gui": "^0.7.6",
+    "simplex-noise": "^2.4.0",
+    "three": "^0.114.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ezra Bartlett",
+  "license": "ISC"
+}
