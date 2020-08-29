@@ -7,10 +7,14 @@ document.body.appendChild( renderer.domElement );
 // Our Javascript will go here.
 
 class Planet {
-    constructor(resolution) {
+    constructor(resolution, seed) {
         this.seaLevel = 1;
-        this.terrain = new terrainGenerator( 2, .5, 5, 'williamZakai', .7, .90, 1.1);
-        
+        this.maxHeight = 1.1
+        this.minHeight = 0.9
+        this.terrain = new terrainGenerator( 2, .5, 5, seed, 1.3, .95, 1.05);
+
+        this.generateLayers(seed)
+
         var geometries = basicSphere(resolution)
         var body = [];
         geometries.forEach((face, index) => {
@@ -28,9 +32,12 @@ class Planet {
     }
 
     modulateSurface() {
+        this.generateLayers(self.seed)
         this.body.forEach((face) => {
             face.geometry.vertices.forEach((point) => {
-                point.normalize().multiplyScalar(this.terrain.get3DPoint(point.x, point.y, point.z));
+                point.normalize()
+                //point.multiplyScalar(this.terrain.get3DPoint(point.x, point.y, point.z));
+                point.multiplyScalar(this.getHeight(point.x, point.y, point.z));
                 if(point.length()<this.seaLevel){
                     point = point.normalize().multiplyScalar(this.seaLevel)
                 }
@@ -44,6 +51,8 @@ class Planet {
     }
 
     setTerrainValues(lacunarity, persistance, layers, seed, base, min, max) {
+        this.maxHeight = max
+        this.minHeight = min
         this.terrain = new terrainGenerator( lacunarity, persistance, layers, seed, base, min, max);
     }
 
@@ -74,20 +83,61 @@ class Planet {
         })
     } 
 
+    generateLayers(seed) {
+        var continents = {
+            terrain: new terrainGenerator( 2, .5, 5, seed, 1.5, .9, 1.1),
+            type: "all"
+        }
+        var mountains = {
+            terrain: new terrainGenerator( 2, .5, 5, seed, 1, .7, 1.15),
+            type: "above"
+        }
+        var hills = {
+            terrain: new terrainGenerator( 2, .5, 5, seed, .5, .9, 1.05),
+            type: "above"
+        }
+
+        this.layers = [continents, hills, mountains]
+    }
+
+    getHeight( x, y, z) {
+        var height = this.seaLevel
+
+        this.layers.forEach(layer => {
+            switch(layer.type) {
+                case "all": 
+                    height = height*layer.terrain.get3DPoint( x, y, z);
+                    break;
+                case "above": 
+                    var tempHeight = Math.max(0, (Math.pow(layer.terrain.get3DPoint( x, y, z),3)-1)/3);
+                    height = height+tempHeight;
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        return height
+    }
+
     calculateColor(averagePoint) {
         //if((averagePoint.y>=.85 || averagePoint.y<=-.85) && averagePoint.length()>=this.seaLevel*1.00011){
         //    return [new THREE.Color('white'), 0];
         //}
         if(averagePoint.length()<=this.seaLevel*1.0001){
-            //var perl = this.terrain.get3DPoint(averagePoint.x, averagePoint.y, averagePoint.z);
-            
-            //return new THREE.Color(0,0,1-(1-perl)*5);//1/perl,1/perl,1);
-            return [new THREE.Color('blue'), 0];
+            var depth = this.seaLevel-this.getHeight(averagePoint.x, averagePoint.y, averagePoint.z);
+            var maxDepth = this.seaLevel-this.minHeight
+            //alert(depth)
+            var colorstring = "rgb("+String(Math.floor(46-41*(Math.log10(1+9*depth/maxDepth))))+", "+String(Math.floor(200-118*(Math.log10(1+9*depth/maxDepth))))+", "+String(Math.floor(255-20*(Math.log10(1+9*depth/maxDepth))))+")"
+            //alert(colorstring)
+            //alert(String(Math.floor(66-61*(Math.log(1+9*depth/.1)))))
+            return [new THREE.Color(colorstring), 0];
+            //return [new THREE.Color('blue'), 0];
         }
         if(averagePoint.length()<=this.seaLevel*1.002){
             return [new THREE.Color('white'), 1];
         }
-        if(averagePoint.length()<=this.seaLevel*1.045){
+        if(averagePoint.length()<=this.seaLevel*1.085){
             return [new THREE.Color('green'), 1];
         }
         return [new THREE.Color('white'), 1];
@@ -294,7 +344,7 @@ scene.add( light );
 //  Confirming cube face orientations
 //***********************************
 
-var planet = new Planet(220);
+var planet = new Planet(300, 'williamZakai');
 planet.addToScene();
 planet.modulateSurface();
 planet.updateColors();
@@ -329,14 +379,15 @@ var guiParams = {
     layers: 5,
     seed: 'williamZakai',
     base: .7,
-    min: .9,
-    max: 1.1,
+    min: .95,
+    max: 1.05,
     regenerateFunction: regenerate,
     sunOrbit: 1,
     sunDistance: 3
 };
 
 function regenerate() {
+    planet.seed = guiParams['seed']
     planet.setTerrainValues( guiParams['lacunarity'], guiParams['persistance'], guiParams['layers'], guiParams['seed'], guiParams['base'], guiParams['min'], guiParams['max']);
     planet.regeneratePlanet();
 }
