@@ -336,13 +336,13 @@ function createSkyBox() {
     let materialArray = [];
 
     for (let i = 0; i < 6; i++) {
-        let texture = new THREE.TextureLoader().load( 'assets/skybox_'+String(i)+'.png');
+        let texture = new THREE.TextureLoader().load( 'http://github.com/ezrabartlett/PerlinPlanets/blob/gh-pages/assets/skybox_'+String(i)+'.png?raw=true');
         var material = new THREE.MeshBasicMaterial( { map: texture });
-        material.side = THREE.BackSide;
+        //material.side = THREE.BackSide;
         materialArray.push(material);
     }
     
-    let skyboxGeometry = new THREE.BoxGeometry( 10000, 10000, 10000);
+    let skyboxGeometry = new THREE.BoxGeometry( 10, 10, 10);
     let skybox = new THREE.Mesh( skyboxGeometry, materialArray );
     scene.add( skybox );
 }
