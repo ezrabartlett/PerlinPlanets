@@ -338,11 +338,11 @@ function createSkyBox() {
     for (let i = 0; i < 6; i++) {
         let texture = new THREE.TextureLoader().load( 'assets/skybox_'+String(i)+'.png');
         var material = new THREE.MeshBasicMaterial( { map: texture });
-        //material.side = THREE.BackSide;
+        material.side = THREE.BackSide;
         materialArray.push(material);
     }
     
-    let skyboxGeometry = new THREE.BoxGeometry( 1.5, 1.5, 1.5);
+    let skyboxGeometry = new THREE.BoxGeometry( 5, 5, 5);
     let skybox = new THREE.Mesh( skyboxGeometry, materialArray );
     scene.add( skybox );
 }
