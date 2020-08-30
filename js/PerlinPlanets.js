@@ -254,31 +254,32 @@ function generateFace(resolution) {
     return face;
 }
 
+var waterMaterial = new THREE.MeshPhongMaterial({vertexColors: THREE.FaceColors, shininess: 70});
+var landMaterial = new THREE.MeshStandardMaterial({vertexColors: THREE.FaceColors});
+var sunMaterial = new THREE.MeshStandardMaterial({
+    emissive: 0xffffee,
+    emissiveIntensity: intensity,
+    color: 0xffffee,
+    roughness: 1
+});
+
 function geometryToObject(geometry, type = "planet", intensity = 20){
     geometry.computeFaceNormals();
 	geometry.mergeVertices();
     // Alternate colors
-    geometry.faces.forEach((face, index) => {
+    /*geometry.faces.forEach((face, index) => {
         if(index%2==0) {
             face.color = new THREE.Color('skyblue');
         }
         else {
             face.color = new THREE.Color('skyblue');
         }
-    });
+    });*/
     
     //geometry.faces[ 0].color = new THREE.Color('green');
     
     //geometry.rotateX(1.5708);
-    
-    var waterMaterial = new THREE.MeshPhongMaterial({vertexColors: THREE.FaceColors, shininess: 70});
-    var landMaterial = new THREE.MeshStandardMaterial({vertexColors: THREE.FaceColors});
-    var sunMaterial = new THREE.MeshStandardMaterial({
-        emissive: 0xffffee,
-        emissiveIntensity: intensity,
-        color: 0xffffee,
-        roughness: 1
-    });
+
     // Set material for planet polygons
     var materials = [ waterMaterial, landMaterial ];
 
