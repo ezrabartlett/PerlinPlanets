@@ -85,8 +85,6 @@ class Planet {
     } 
 
     generateLayers() {
-
-        alert(this.seed);
         var continents = {
             terrain: new terrainGenerator( 2, .5, 5, this.seed, 1.5, .9, 1.1),
             type: "all"
@@ -396,13 +394,13 @@ function regenerate() {
 }
 
 gui.add(guiParams, 'rotationSpeed').min(0).max(100).step(1);
-gui.add(guiParams, 'lacunarity').min(0).max(10).step(.1);
-gui.add(guiParams, 'persistance').min(0).max(2).step(.1);
-gui.add(guiParams, 'layers').min(0).max(15).step(1);
+//gui.add(guiParams, 'lacunarity').min(0).max(10).step(.1);
+//gui.add(guiParams, 'persistance').min(0).max(2).step(.1);
+//gui.add(guiParams, 'layers').min(0).max(15).step(1);
 gui.add(guiParams, 'seed');
-gui.add(guiParams, 'base').min(0.05).max(15).step(.05);
-gui.add(guiParams, 'min').min(0.5).max(1).step(.05);
-gui.add(guiParams, 'max').min(1).max(2).step(.05);
+//gui.add(guiParams, 'base').min(0.05).max(15).step(.05);
+//gui.add(guiParams, 'min').min(0.5).max(1).step(.05);
+//gui.add(guiParams, 'max').min(1).max(2).step(.05);
 gui.add(guiParams, 'regenerateFunction').name('Regenerate');
 gui.add(guiParams, 'sunOrbit').min(0).max(5).step(.1).name('sun speed');
 gui.add(guiParams, 'sunDistance').min(0).max(30).step(.1).name('sun distance');
