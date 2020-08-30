@@ -11,9 +11,10 @@ class Planet {
         this.seaLevel = 1;
         this.maxHeight = 1.1
         this.minHeight = 0.9
-        this.terrain = new terrainGenerator( 2, .5, 5, seed, 1.3, .95, 1.05);
+        this.seed = seed
+        this.terrain = new terrainGenerator( 2, .5, 5, this.seed, 1.3, .95, 1.05);
 
-        this.generateLayers(seed)
+        this.generateLayers()
 
         var geometries = basicSphere(resolution)
         var body = [];
@@ -32,7 +33,6 @@ class Planet {
     }
 
     modulateSurface() {
-        this.generateLayers(self.seed)
         this.body.forEach((face) => {
             face.geometry.vertices.forEach((point) => {
                 point.normalize()
@@ -61,6 +61,7 @@ class Planet {
     }
 
     regeneratePlanet() {
+        this.generateLayers()
         this.modulateSurface();
         this.updateColors();
     }
@@ -83,17 +84,19 @@ class Planet {
         })
     } 
 
-    generateLayers(seed) {
+    generateLayers() {
+
+        alert(this.seed);
         var continents = {
-            terrain: new terrainGenerator( 2, .5, 5, seed, 1.5, .9, 1.1),
+            terrain: new terrainGenerator( 2, .5, 5, this.seed, 1.5, .9, 1.1),
             type: "all"
         }
         var mountains = {
-            terrain: new terrainGenerator( 2, .5, 5, seed, 1, .7, 1.15),
+            terrain: new terrainGenerator( 2, .5, 5, this.seed, 1, .7, 1.15),
             type: "above"
         }
         var hills = {
-            terrain: new terrainGenerator( 2, .5, 5, seed, .5, .9, 1.05),
+            terrain: new terrainGenerator( 2, .5, 5, this.seed, .5, .9, 1.05),
             type: "above"
         }
 
@@ -255,7 +258,7 @@ function generateFace(resolution) {
 
 function geometryToObject(geometry, type = "planet", intensity = 20){
     geometry.computeFaceNormals();
-
+	geometry.mergeVertices();
     // Alternate colors
     geometry.faces.forEach((face, index) => {
         if(index%2==0) {
@@ -414,11 +417,11 @@ playerTracker.position.set(1,1,1);
 function animate(time) {
     requestAnimationFrame( animate );
 
-    var playerPosition = new THREE.Vector3(camera.position.x, camera.position.y, camera.position.z).normalize();
-    playerPosition.multiplyScalar(planet.terrain.get3DPoint(playerPosition.x,playerPosition.y,playerPosition.z));
-    raycaster.set(new THREE.Vector3(0,0,0), playerPosition.normalize());
+    //var playerPosition = new THREE.Vector3(camera.position.x, camera.position.y, camera.position.z).normalize();
+    //playerPosition.multiplyScalar(planet.terrain.get3DPoint(playerPosition.x,playerPosition.y,playerPosition.z));
+    //raycaster.set(new THREE.Vector3(0,0,0), playerPosition.normalize());
 
-    playerTracker.position.set(playerPosition.x, playerPosition.y, playerPosition.z);
+    //playerTracker.position.set(playerPosition.x, playerPosition.y, playerPosition.z);
     //shapes[0].rotation.y += 0.01;
     //cube2.rotation.y += 0.01;
 
