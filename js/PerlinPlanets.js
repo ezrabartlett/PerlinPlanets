@@ -332,6 +332,21 @@ function basicSphere(resolution) {
     return faces;
 }
 
+function createSkyBox() {
+    let materialArray = [];
+
+    for (let i = 0; i < 6; i++) {
+        let texture = new THREE.TextureLoader().load( 'assets/skybox_'+String(i)+'.png');
+        var material = new THREE.MeshBasicMaterial( { map: texture });
+        material.side = THREE.BackSide;
+        materialArray.push(material);
+    }
+    
+    let skyboxGeometry = new THREE.BoxGeometry( 10000, 10000, 10000);
+    let skybox = new THREE.Mesh( skyboxGeometry, materialArray );
+    scene.add( skybox );
+}
+
 //*****************************
 //  LIGHT SOURCES
 //*****************************
@@ -340,6 +355,7 @@ function basicSphere(resolution) {
 var light = new THREE.AmbientLight( 0x404040 , 1); // soft white light
 scene.add( light );
 
+createSkyBox()
 
 //***********************************
 //  Confirming cube face orientations
