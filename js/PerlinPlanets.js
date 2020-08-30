@@ -9,6 +9,7 @@ document.body.appendChild( renderer.domElement );
 class Planet {
     constructor(resolution, seed) {
         this.seaLevel = 1;
+        this.poles = true;
         this.maxHeight = 1.1;
         this.minHeight = 0.9;
         this.seed = seed;
@@ -125,9 +126,14 @@ class Planet {
         //if((averagePoint.y>=.85 || averagePoint.y<=-.85) && averagePoint.length()>=this.seaLevel*1.00011){
         //    return [new THREE.Color('white'), 0];
         //}
-
-        if(temperature<12 && averagePoint.length()>this.seaLevel*1.0001) {
-            return [new THREE.Color('white'), 1];
+        if(this.poles){
+            if(temperature<11.5 && averagePoint.length()>this.seaLevel*1.0001 || averagePoint.length() >= this.seaLevel*1.075) {
+                return [new THREE.Color('white'), 1];
+            }
+        } else {
+            if(averagePoint.length() >= this.seaLevel*1.075) {
+                return [new THREE.Color('white'), 1];
+            }
         }
 
         var color = [new THREE.Color('white'), 1]
@@ -405,6 +411,7 @@ function regenerate() {
 }
 
 var guiParams = {
+    poles: true,
     rotationSpeed: 0,
     lacunarity: 2,
     persistance: .5,
@@ -420,11 +427,13 @@ var guiParams = {
 
 function regenerate() {
     planet.seed = guiParams['seed']
+    planet.poles = guiParams['poles']
     planet.setTerrainValues( guiParams['lacunarity'], guiParams['persistance'], guiParams['layers'], guiParams['seed'], guiParams['base'], guiParams['min'], guiParams['max']);
     planet.regeneratePlanet();
 }
 
 gui.add(guiParams, 'rotationSpeed').min(0).max(100).step(1);
+gui.add(guiParams, 'poles');
 //gui.add(guiParams, 'lacunarity').min(0).max(10).step(.1);
 //gui.add(guiParams, 'persistance').min(0).max(2).step(.1);
 //gui.add(guiParams, 'layers').min(0).max(15).step(1);
