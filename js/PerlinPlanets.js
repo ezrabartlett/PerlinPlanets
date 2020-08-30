@@ -258,7 +258,7 @@ var waterMaterial = new THREE.MeshPhongMaterial({vertexColors: THREE.FaceColors,
 var landMaterial = new THREE.MeshStandardMaterial({vertexColors: THREE.FaceColors});
 var sunMaterial = new THREE.MeshStandardMaterial({
     emissive: 0xffffee,
-    emissiveIntensity: intensity,
+    emissiveIntensity: 20,
     color: 0xffffee,
     roughness: 1
 });
