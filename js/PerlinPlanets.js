@@ -342,7 +342,7 @@ function createSkyBox() {
         materialArray.push(material);
     }
     
-    let skyboxGeometry = new THREE.BoxGeometry( 10, 10, 10);
+    let skyboxGeometry = new THREE.BoxGeometry( 1.5, 1.5, 1.5);
     let skybox = new THREE.Mesh( skyboxGeometry, materialArray );
     scene.add( skybox );
 }
