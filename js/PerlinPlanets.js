@@ -336,7 +336,7 @@ function createSkyBox() {
     let materialArray = [];
 
     for (let i = 0; i < 6; i++) {
-        let texture = new THREE.TextureLoader().load( 'http://github.com/ezrabartlett/PerlinPlanets/blob/gh-pages/assets/skybox_'+String(i)+'.png?raw=true');
+        let texture = new THREE.TextureLoader().load( 'assets/skybox_'+String(i)+'.png');
         var material = new THREE.MeshBasicMaterial( { map: texture });
         //material.side = THREE.BackSide;
         materialArray.push(material);
