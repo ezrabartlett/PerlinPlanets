@@ -9,11 +9,11 @@ document.body.appendChild( renderer.domElement );
 class Planet {
     constructor(resolution, seed) {
         this.seaLevel = 1;
-        this.maxHeight = 1.1;
-        this.minHeight = 0.9;
-        this.seed = seed;
+        this.maxHeight = 1.1
+        this.minHeight = 0.9
+        this.seed = seed
         this.terrain = new terrainGenerator( 2, .5, 5, this.seed, 1.3, .95, 1.05);
-        this.baseTemp = 70;
+
         this.generateLayers()
 
         var geometries = basicSphere(resolution)
@@ -121,16 +121,10 @@ class Planet {
         return height
     }
 
-    calculateColor(averagePoint, temperature) {
+    calculateColor(averagePoint) {
         //if((averagePoint.y>=.85 || averagePoint.y<=-.85) && averagePoint.length()>=this.seaLevel*1.00011){
         //    return [new THREE.Color('white'), 0];
         //}
-
-        if(temperature<12 && averagePoint.length()>this.seaLevel*1.0001) {
-            return [new THREE.Color('white'), 1];
-        }
-
-        var color = [new THREE.Color('white'), 1]
         if(averagePoint.length()<=this.seaLevel*1.0001){
             var depth = this.seaLevel-this.getHeight(averagePoint.x, averagePoint.y, averagePoint.z);
             var maxDepth = this.seaLevel-this.minHeight
@@ -138,17 +132,16 @@ class Planet {
             var colorstring = "rgb("+String(Math.floor(46-41*(Math.log10(1+9*depth/maxDepth))))+", "+String(Math.floor(200-118*(Math.log10(1+9*depth/maxDepth))))+", "+String(Math.floor(255-20*(Math.log10(1+9*depth/maxDepth))))+")"
             //alert(colorstring)
             //alert(String(Math.floor(66-61*(Math.log(1+9*depth/.1)))))
-            //alert(colorstring);
-            color = [new THREE.Color(colorstring), 0];
+            return [new THREE.Color(colorstring), 0];
             //return [new THREE.Color('blue'), 0];
-        } else if(averagePoint.length()<=this.seaLevel*1.002) {
-            color = [new THREE.Color('white'), 1];
-        } else {
-            color = [new THREE.Color('green'), 1];
         }
-
-        return color;
-        //return [new THREE.Color('white'), 1];
+        if(averagePoint.length()<=this.seaLevel*1.002){
+            return [new THREE.Color('white'), 1];
+        }
+        if(averagePoint.length()<=this.seaLevel*1.085){
+            return [new THREE.Color('green'), 1];
+        }
+        return [new THREE.Color('white'), 1];
 
     }
 
@@ -160,18 +153,11 @@ class Planet {
         return average;
     }
 
-    getTemperature(average) {
-        var temperature = this.baseTemp*(1/(average.length()*4))*(1-(0.4*Math.abs(average.y)))
-
-        return temperature;
-    }
-
     updateColors() {
         this.body.forEach((face)=>{
             face.geometry.faces.forEach((polygon)=>{
                 var average = this.getFaceAverage(face, polygon);
-                var temperature = this.getTemperature(average);
-                var material = this.calculateColor(average, temperature);
+                var material = this.calculateColor(average);
                 polygon.color = material[0];
                 polygon.materialIndex = material[1];
             });
