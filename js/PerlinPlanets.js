@@ -190,7 +190,7 @@ class Planet {
 //******************************************
 class Sun {
     constructor(radius = 1, resolution = 20, intensity = 1) {
-        var geometries = basicSphere(resolution);
+        var geometries = basicSphere(resolution, radius);
         var body = [];
         geometries.forEach((face, index) => {
             var temp = geometryToObject(face, "Sun", intensity);
@@ -240,7 +240,7 @@ class Sun {
 // Normals and material not yet applied
 // Now normalized to make a sphere
 //******************************************
-function generateFace(resolution) {
+function generateFace(resolution, radius = 1) {
     const face = new THREE.Geometry();
 
     // Create vertices as a percentage of each face axis, except y, which is 1
@@ -255,7 +255,7 @@ function generateFace(resolution) {
             // face.vertices.push((new THREE.Vector3(2*x_percent-1, 1,  2*z_percent-1)).normalize());
 
             // Push the vertices, based on the position calculations
-            face.vertices.push((new THREE.Vector3(2*x_percent-1, 1,  2*z_percent-1)).normalize());
+            face.vertices.push((new THREE.Vector3(2*x_percent-1, 1,  2*z_percent-1)).normalize()*radius);
         }
     }
 
@@ -316,35 +316,35 @@ function geometryToObject(geometry, type = "planet", intensity = 20){
 // Returns a "Sphere" that is actually 6 cube faces inflated into a ball
 //******************************************
 
-function basicSphere(resolution) {
+function basicSphere(resolution, radius = 1) {
     
     var faces = []
 
-    var topFace = generateFace(resolution);
+    var topFace = generateFace(resolution, radius);
     faces.push(topFace);
 
-    var bottomFace = generateFace(resolution);
+    var bottomFace = generateFace(resolution, radius);
     bottomFace.rotateX(Math.PI);
     faces.push(bottomFace);
     
-    var xPlusFace = generateFace(resolution);
+    var xPlusFace = generateFace(resolution, radius);
     xPlusFace.rotateZ(0.5*Math.PI);
     xPlusFace.rotateX(0.5*Math.PI);
     faces.push(xPlusFace);
 
-    var zPlusFace = generateFace(resolution);
+    var zPlusFace = generateFace(resolution, radius);
     zPlusFace.rotateZ(0.5*Math.PI);
     zPlusFace.rotateX(0.5*Math.PI);
     zPlusFace.rotateY(0.5*Math.PI);
     faces.push(zPlusFace);
 
-    var xMinusFace = generateFace(resolution);
+    var xMinusFace = generateFace(resolution, radius);
     xMinusFace.rotateZ(0.5*Math.PI);
     xMinusFace.rotateX(0.5*Math.PI);
     xMinusFace.rotateY(Math.PI);
     faces.push(xMinusFace);
 
-    var zMinusFace = generateFace(resolution);
+    var zMinusFace = generateFace(resolution, radius);
     zMinusFace.rotateZ(0.5*Math.PI);
     zMinusFace.rotateX(0.5*Math.PI);
     zMinusFace.rotateY(1.5*Math.PI);
@@ -387,7 +387,7 @@ planet.addToScene();
 planet.modulateSurface();
 planet.updateColors();
 
-var sun = new Sun(2,  15);
+var sun = new Sun(10,  15);
 sun.setPosition(0, 0, 6);
 sun.addToScene()
 
