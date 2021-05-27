@@ -387,7 +387,7 @@ planet.addToScene();
 planet.modulateSurface();
 planet.updateColors();
 
-var sun = new Sun(2,  15);
+var sun = new Sun(10,  15);
 sun.setPosition(0, 0, 6);
 sun.addToScene()
 
