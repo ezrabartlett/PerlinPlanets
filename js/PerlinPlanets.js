@@ -255,7 +255,7 @@ function generateFace(resolution, radius = 1) {
             // face.vertices.push((new THREE.Vector3(2*x_percent-1, 1,  2*z_percent-1)).normalize());
 
             // Push the vertices, based on the position calculations
-            face.vertices.push((new THREE.Vector3(2*x_percent-1, 1,  2*z_percent-1)).normalize()*radius);
+            face.vertices.push((new THREE.Vector3(2*x_percent-1, 1,  2*z_percent-1)).normalize().multiplyScalar(radius));
         }
     }
 
