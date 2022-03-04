@@ -9,6 +9,7 @@ canvas {
 	position: absolute;
 	top: 10px;
 	width: 30%;
+    height: 100%;
     padding-top: 20px;
 	text-align: left;
 	z-index: 100;
@@ -19,5 +20,32 @@ canvas {
 }
 
 #links {
+    position: absolute;
+    z-index: 100;
+    bottom:0;
+    display: block;
+}
 
+#linkedin-logo {
+    height: 36px;
+    width: 42px;
+}
+
+#linkedin-logo-large {
+    height: 43px;
+    width: 50px;
+    padding-left: 2px;
+}
+
+#github-logo {
+    height: 36px;
+    width: 36px;
+}
+
+#github-logo-dark {
+    padding: 3px;
+    border-radius: 2px;
+    background-color: white;
+    height: 36px;
+    width: 36px;
 }
