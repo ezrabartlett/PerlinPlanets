@@ -412,7 +412,7 @@ function regenerate() {
 
 var guiParams = {
     poles: true,
-    rotationSpeed: 0,
+    rotationSpeed: 2,
     lacunarity: 2,
     persistance: .5,
     layers: 5,
