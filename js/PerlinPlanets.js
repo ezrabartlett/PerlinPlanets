@@ -416,13 +416,13 @@ var guiParams = {
     lacunarity: 2,
     persistance: .5,
     layers: 5,
-    seed: 'williamZakai',
+    seed: 'Ezra Bartlett',
     base: .7,
     min: .95,
     max: 1.05,
     regenerateFunction: regenerate,
     sunOrbit: 1,
-    sunDistance: 3
+    sunDistance: 12
 };
 
 function regenerate() {
@@ -437,11 +437,11 @@ gui.add(guiParams, 'poles');
 //gui.add(guiParams, 'lacunarity').min(0).max(10).step(.1);
 //gui.add(guiParams, 'persistance').min(0).max(2).step(.1);
 //gui.add(guiParams, 'layers').min(0).max(15).step(1);
-gui.add(guiParams, 'seed');
+gui.add(guiParams, 'seed').name("Coordinates");
 //gui.add(guiParams, 'base').min(0.05).max(15).step(.05);
 //gui.add(guiParams, 'min').min(0.5).max(1).step(.05);
 //gui.add(guiParams, 'max').min(1).max(2).step(.05);
-gui.add(guiParams, 'regenerateFunction').name('Regenerate');
+gui.add(guiParams, 'regenerateFunction').name('Go');
 gui.add(guiParams, 'sunOrbit').min(0).max(5).step(.1).name('sun speed');
 gui.add(guiParams, 'sunDistance').min(0).max(30).step(.1).name('sun distance');
 
