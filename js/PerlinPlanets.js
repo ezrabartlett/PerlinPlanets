@@ -387,7 +387,7 @@ planet.addToScene();
 planet.modulateSurface();
 planet.updateColors();
 
-var sun = new Sun(10,  15);
+var sun = new Sun(4,  15);
 sun.setPosition(0, 0, 6);
 sun.addToScene()
 
@@ -412,7 +412,7 @@ function regenerate() {
 
 var guiParams = {
     poles: true,
-    rotationSpeed: 2,
+    rotationSpeed: 2 ,
     lacunarity: 2,
     persistance: .5,
     layers: 5,
