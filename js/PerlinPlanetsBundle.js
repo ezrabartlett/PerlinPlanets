@@ -1,12 +1,240 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 var scene = new THREE.Scene()
-var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-var renderer = new THREE.WebGLRenderer();
-renderer.setSize( window.innerWidth, window.innerHeight);
+var raycaster = new THREE.Raycaster();
+var renderer = new THREE.WebGLRenderer(antialaising = true);
+// IMPORTANT: The width and height need to account for any padding / border given in the index.
+renderer.setSize( window.innerWidth-20, window.innerHeight-20);
 
 document.body.appendChild( renderer.domElement );
 // Our Javascript will go here.
+
+class Planet {
+    constructor(resolution, seed) {
+        this.seaLevel = 1;
+        this.poles = true;
+        this.maxHeight = 1.1;
+        this.minHeight = 0.9;
+        this.seed = seed;
+        this.terrain = new terrainGenerator( 2, .5, 5, this.seed, 1.3, .95, 1.05);
+        this.baseTemp = 70;
+        this.generateLayers()
+
+        var geometries = basicSphere(resolution)
+        var body = [];
+        geometries.forEach((face, index) => {
+            var temp = geometryToObject(face);
+            body.push(temp);
+        });
+
+        this.body = body;
+    }
+
+    addToScene() {
+        this.body.forEach((face) => {
+            scene.add(face)
+        });
+    }
+
+    modulateSurface() {
+        this.body.forEach((face) => {
+            face.geometry.vertices.forEach((point) => {
+                point.normalize()
+                //point.multiplyScalar(this.terrain.get3DPoint(point.x, point.y, point.z));
+                point.multiplyScalar(this.getHeight(point.x, point.y, point.z));
+                if(point.length()<this.seaLevel){
+                    point = point.normalize().multiplyScalar(this.seaLevel)
+                }
+            });
+            face.geometry.computeFaceNormals();
+            face.geometry.verticesNeedUpdate = true;
+            face.geometry.elementsNeedUpdate = true;
+            face.geometry.normalsNeedUpdate = true;
+            face.geometry.colorsNeedUpdate = true;
+        });
+    }
+
+    setTerrainValues(lacunarity, persistance, layers, seed, base, min, max) {
+        this.maxHeight = max
+        this.minHeight = min
+        this.terrain = new terrainGenerator( lacunarity, persistance, layers, seed, base, min, max);
+    }
+
+    resetResolution() {
+
+    }
+
+    regeneratePlanet() {
+        this.generateLayers()
+        this.modulateSurface();
+        this.updateColors();
+    }
+
+    rotateX(value) {
+        this.body.forEach((face) => {
+            face.rotation.x += value
+        })
+    } 
+
+    rotateY(value) {
+        this.body.forEach((face) => {
+            face.rotation.y += value
+        })
+    } 
+
+    rotateZ(value) {
+        this.body.forEach((face) => {
+            face.rotation.z += value
+        })
+    } 
+
+    generateLayers() {
+        var continents = {
+            terrain: new terrainGenerator( 2, .5, 5, this.seed, 1.5, .9, 1.1),
+            type: "all"
+        }
+        var mountains = {
+            terrain: new terrainGenerator( 2, .5, 5, this.seed, 1, .7, 1.15),
+            type: "above"
+        }
+        var hills = {
+            terrain: new terrainGenerator( 2, .5, 5, this.seed, .5, .9, 1.05),
+            type: "above"
+        }
+
+        this.layers = [continents, hills, mountains]
+    }
+
+    getHeight( x, y, z) {
+        var height = this.seaLevel
+
+        this.layers.forEach(layer => {
+            switch(layer.type) {
+                case "all": 
+                    height = height*layer.terrain.get3DPoint( x, y, z);
+                    break;
+                case "above": 
+                    var tempHeight = Math.max(0, (Math.pow(layer.terrain.get3DPoint( x, y, z),3)-1)/3);
+                    height = height+tempHeight;
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        return height
+    }
+
+    calculateColor(averagePoint, temperature) {
+        //if((averagePoint.y>=.85 || averagePoint.y<=-.85) && averagePoint.length()>=this.seaLevel*1.00011){
+        //    return [new THREE.Color('white'), 0];
+        //}
+        if(this.poles){
+            if(temperature<11.5 && averagePoint.length()>this.seaLevel*1.0001 || averagePoint.length() >= this.seaLevel*1.075) {
+                return [new THREE.Color('white'), 1];
+            }
+        } else {
+            if(averagePoint.length() >= this.seaLevel*1.075) {
+                return [new THREE.Color('white'), 1];
+            }
+        }
+
+        var color = [new THREE.Color('white'), 1]
+        if(averagePoint.length()<=this.seaLevel*1.0001){
+            var depth = this.seaLevel-this.getHeight(averagePoint.x, averagePoint.y, averagePoint.z);
+            var maxDepth = this.seaLevel-this.minHeight
+            //alert(depth)
+            var colorstring = "rgb("+String(Math.floor(46-41*(Math.log10(1+9*depth/maxDepth))))+", "+String(Math.floor(200-118*(Math.log10(1+9*depth/maxDepth))))+", "+String(Math.floor(255-20*(Math.log10(1+9*depth/maxDepth))))+")"
+            //alert(colorstring)
+            //alert(String(Math.floor(66-61*(Math.log(1+9*depth/.1)))))
+            //alert(colorstring);
+            color = [new THREE.Color(colorstring), 0];
+            //return [new THREE.Color('blue'), 0];
+        } else if(averagePoint.length()<=this.seaLevel*1.002) {
+            color = [new THREE.Color('white'), 1];
+        } else {
+            color = [new THREE.Color('green'), 1];
+        }
+
+        return color;
+        //return [new THREE.Color('white'), 1];
+
+    }
+
+    getFaceAverage(face, polygon) {
+        var x = (face.geometry.vertices[polygon.a].x+face.geometry.vertices[polygon.b].x+face.geometry.vertices[polygon.c].x)/3;
+        var y = (face.geometry.vertices[polygon.a].y+face.geometry.vertices[polygon.b].y+face.geometry.vertices[polygon.c].y)/3;
+        var z = (face.geometry.vertices[polygon.a].z+face.geometry.vertices[polygon.b].z+face.geometry.vertices[polygon.c].z)/3;
+        var average = new THREE.Vector3(x, y, z);
+        return average;
+    }
+
+    getTemperature(average) {
+        var temperature = this.baseTemp*(1/(average.length()*4))*(1-(0.4*Math.abs(average.y)))
+
+        return temperature;
+    }
+
+    updateColors() {
+        this.body.forEach((face)=>{
+            face.geometry.faces.forEach((polygon)=>{
+                var average = this.getFaceAverage(face, polygon);
+                var temperature = this.getTemperature(average);
+                var material = this.calculateColor(average, temperature);
+                polygon.color = material[0];
+                polygon.materialIndex = material[1];
+            });
+        })
+    }
+}
+
+//******************************************
+// Creates an emmissive sun object
+//******************************************
+class Sun {
+    constructor(radius = 1, resolution = 20, intensity = 1) {
+        var geometries = basicSphere(resolution, radius);
+        var body = [];
+        geometries.forEach((face, index) => {
+            var temp = geometryToObject(face, "Sun", intensity);
+            body.push(temp);
+        });
+        //this.light = new THREE.PointLight( 0xffffff, 1, 100 );
+        this.body = body;
+
+        this.light = new THREE.PointLight( 0xffffff, 1, 100 );
+        this.light.position.set( 0, 0,  7);
+        scene.add(this.light);
+
+    }
+
+    addToScene() {
+        this.body.forEach((face) => {
+            scene.add(face)
+        });
+        scene.add(this.light);
+    }
+
+    setPosition(x, y, z) {
+        this.body.forEach((face) => {
+            face.position.x = x;
+            face.position.y = y;
+            face.position.z = z;
+            this.light.add(face);
+        })
+        this.light.position.set( x, y, z ); 
+    }
+
+    move(x, y, z) {
+        this.body.forEach((face) => {
+            face.position.x += x;
+            face.position.y += y;
+            face.position.z += z;
+            this.light.add(face);
+        })
+        this.light.position.set( this.light.position.x+x, this.light.position.y+y, this.light.position.z+z ); 
+    }
+
+}
 
 //******************************************
 // Returns a face of resolution^2 vertices
@@ -14,7 +242,7 @@ document.body.appendChild( renderer.domElement );
 // Normals and material not yet applied
 // Now normalized to make a sphere
 //******************************************
-function generateFace(resolution) {
+function generateFace(resolution, radius = 1) {
     const face = new THREE.Geometry();
 
     // Create vertices as a percentage of each face axis, except y, which is 1
@@ -29,7 +257,7 @@ function generateFace(resolution) {
             // face.vertices.push((new THREE.Vector3(2*x_percent-1, 1,  2*z_percent-1)).normalize());
 
             // Push the vertices, based on the position calculations
-            face.vertices.push((new THREE.Vector3(2*x_percent-1, 1,  2*z_percent-1)).normalize());
+            face.vertices.push((new THREE.Vector3(2*x_percent-1, 1,  2*z_percent-1)).normalize().multiplyScalar(radius));
         }
     }
 
@@ -48,26 +276,41 @@ function generateFace(resolution) {
     return face;
 }
 
-function geometryToObject(geometry){
-    geometry.computeFaceNormals();
+var waterMaterial = new THREE.MeshPhongMaterial({vertexColors: THREE.FaceColors, shininess: 70});
+var landMaterial = new THREE.MeshStandardMaterial({vertexColors: THREE.FaceColors});
+var sunMaterial = new THREE.MeshStandardMaterial({
+    emissive: 0xffffee,
+    emissiveIntensity: 20,
+    color: 0xffffee,
+    roughness: 1
+});
 
+function geometryToObject(geometry, type = "planet", intensity = 20){
+    geometry.computeFaceNormals();
+	geometry.mergeVertices();
     // Alternate colors
-    geometry.faces.forEach((face, index) => {
+    /*geometry.faces.forEach((face, index) => {
         if(index%2==0) {
-            face.color = new THREE.Color('grey');
+            face.color = new THREE.Color('skyblue');
         }
         else {
-            face.color = new THREE.Color('grey');
+            face.color = new THREE.Color('skyblue');
         }
-    });
+    });*/
     
-    geometry.faces[ 0].color = new THREE.Color('green');
+    //geometry.faces[ 0].color = new THREE.Color('green');
     
     //geometry.rotateX(1.5708);
-    
-    var material = new THREE.MeshLambertMaterial({vertexColors: THREE.FaceColors});
-    
-    return (new THREE.Mesh(geometry, material));
+
+    // Set material for planet polygons
+    var materials = [ waterMaterial, landMaterial ];
+
+    if(type == "Sun") {
+        materials = [sunMaterial];
+    }
+    var mesh = new THREE.Mesh(geometry, materials)
+    mesh.receiveShadow = true;
+    return mesh;
 }
 
 //******************************************
@@ -75,35 +318,35 @@ function geometryToObject(geometry){
 // Returns a "Sphere" that is actually 6 cube faces inflated into a ball
 //******************************************
 
-function basicSphere(resolution) {
+function basicSphere(resolution, radius = 1) {
     
     var faces = []
 
-    var topFace = generateFace(resolution);
+    var topFace = generateFace(resolution, radius);
     faces.push(topFace);
 
-    var bottomFace = generateFace(resolution);
+    var bottomFace = generateFace(resolution, radius);
     bottomFace.rotateX(Math.PI);
     faces.push(bottomFace);
     
-    var xPlusFace = generateFace(resolution);
+    var xPlusFace = generateFace(resolution, radius);
     xPlusFace.rotateZ(0.5*Math.PI);
     xPlusFace.rotateX(0.5*Math.PI);
     faces.push(xPlusFace);
 
-    var zPlusFace = generateFace(resolution);
+    var zPlusFace = generateFace(resolution, radius);
     zPlusFace.rotateZ(0.5*Math.PI);
     zPlusFace.rotateX(0.5*Math.PI);
     zPlusFace.rotateY(0.5*Math.PI);
     faces.push(zPlusFace);
 
-    var xMinusFace = generateFace(resolution);
+    var xMinusFace = generateFace(resolution, radius);
     xMinusFace.rotateZ(0.5*Math.PI);
     xMinusFace.rotateX(0.5*Math.PI);
     xMinusFace.rotateY(Math.PI);
     faces.push(xMinusFace);
 
-    var zMinusFace = generateFace(resolution);
+    var zMinusFace = generateFace(resolution, radius);
     zMinusFace.rotateZ(0.5*Math.PI);
     zMinusFace.rotateX(0.5*Math.PI);
     zMinusFace.rotateY(1.5*Math.PI);
@@ -112,66 +355,126 @@ function basicSphere(resolution) {
     return faces;
 }
 
+function createSkyBox() {
+    let materialArray = [];
+
+    for (let i = 0; i < 6; i++) {
+        let texture = new THREE.TextureLoader().load( 'assets/skybox_'+String(i)+'.png');
+        var material = new THREE.MeshBasicMaterial( { map: texture });
+        material.side = THREE.BackSide;
+        materialArray.push(material);
+    }
+    
+    let skyboxGeometry = new THREE.BoxGeometry( 1000, 1000, 1000);
+    let skybox = new THREE.Mesh( skyboxGeometry, materialArray );
+    scene.add( skybox );
+}
+
 //*****************************
 //  LIGHT SOURCES
 //*****************************
 
-var light = new THREE.PointLight( 0xffffff, 4, 100 );
-light.position.set( 10, 0, 7 );
 
+var light = new THREE.AmbientLight( 0x404040 , 1); // soft white light
 scene.add( light );
 
-var light = new THREE.AmbientLight( 0x404040 ); // soft white light
-scene.add( light );
-
-//***********************************
-//  JUNK
-//***********************************
-
-//var geometry = new THREE.SphereGeometry(4, 5, 5, 0, Math.PI * 2, 0, Math.PI * 2);
-//var material = new THREE.MeshLambertMaterial();
-//var cube = new THREE.Mesh(geometry, material);
-//scene.add(cube);
-
-//var geometry = new THREE.SphereGeometry( 5, 32, 32 );
-//var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
-//var sphere = new THREE.Mesh( geometry, material );
+createSkyBox()
 
 //***********************************
 //  Confirming cube face orientations
 //***********************************
 
-var geometries = basicSphere(200);
-var shapes = [];
-geometries.forEach((face, index) => {
-    var temp = geometryToObject(face);
-    shapes.push(temp);
-    scene.add(temp);
-});
+var planet = new Planet(300, 'williamZakai');
+planet.addToScene();
+planet.modulateSurface();
+planet.updateColors();
 
-//cube.rotation.x += 0;
+var sun = new Sun(4,  15);
+sun.setPosition(0, 0, 6);
+sun.addToScene()
 
 //***********************************
 //  CAMERA
 //***********************************
 
-camera.position.z = 1;
-camera.position.y = 2;
-camera.rotation.x = -1.2;
+var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000);
+//var FPCamera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.z = 3.5;
+//FPCamera.rotation.x = 0//1.5;
+//camera.rotation.z = 1.6;
+var controls = new THREE.OrbitControls( camera, renderer.domElement );
 
+var gui = new dat.GUI({
+    height : 5 * 32 - 1
+});
+gui.domElement.id = 'gui';
 
-function animate() {
+function regenerate() {
+    planet.regeneratePlanet();
+}
+
+var guiParams = {
+    poles: true,
+    rotationSpeed: 2 ,
+    lacunarity: 2,
+    persistance: .5,
+    layers: 5,
+    seed: 'Ezra Bartlett',
+    base: .7,
+    min: .95,
+    max: 1.05,
+    regenerateFunction: regenerate,
+    sunOrbit: 1,
+    sunDistance: 12
+};
+
+function regenerate() {
+    planet.seed = guiParams['seed']
+    planet.poles = guiParams['poles']
+    planet.setTerrainValues( guiParams['lacunarity'], guiParams['persistance'], guiParams['layers'], guiParams['seed'], guiParams['base'], guiParams['min'], guiParams['max']);
+    planet.regeneratePlanet();
+}
+//gui.add(guiParams, 'lacunarity').min(0).max(10).step(.1);
+//gui.add(guiParams, 'persistance').min(0).max(2).step(.1);
+//gui.add(guiParams, 'layers').min(0).max(15).step(1);
+gui.add(guiParams, 'seed').name("Coordinates");
+//gui.add(guiParams, 'base').min(0.05).max(15).step(.05);
+//gui.add(guiParams, 'min').min(0.5).max(1).step(.05);
+//gui.add(guiParams, 'max').min(1).max(2).step(.05);
+gui.add(guiParams, 'regenerateFunction').name('Go');
+
+var sphere = new THREE.SphereGeometry( .05, 32, 32 );
+var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+var playerTracker = new THREE.Mesh( sphere, material );
+
+playerTracker.position.set(1,1,1);
+//scene.add( playerTracker );
+var sunDistance = 12;
+var rotationSpeed = 2;
+var orbitSpeed = 1;
+function animate(time) {
     requestAnimationFrame( animate );
 
+    //var playerPosition = new THREE.Vector3(camera.position.x, camera.position.y, camera.position.z).normalize();
+    //playerPosition.multiplyScalar(planet.terrain.get3DPoint(playerPosition.x,playerPosition.y,playerPosition.z));
+    //raycaster.set(new THREE.Vector3(0,0,0), playerPosition.normalize());
+
+    //playerTracker.position.set(playerPosition.x, playerPosition.y, playerPosition.z);
     //shapes[0].rotation.y += 0.01;
     //cube2.rotation.y += 0.01;
 
-    shapes.forEach((face, index) => {
-        face.rotation.x+=.01;
-        face.rotation.y+=.01;
-    });
+    planet.rotateY(rotationSpeed/1000)
+    //shapes.forEach((face, index) => {
+    //    face.rotation.x+=.01;
+    //    face.rotation.y+=.01;
+    //});
 
-    renderer.render( scene, camera );
+    //sun.move(sun.);
+    
+    sun.setPosition(sunDistance*Math.cos(orbitSpeed*(time/10000)),0,sunDistance*Math.sin(orbitSpeed*(time/10000)));
+
+    renderer.render( scene, camera);
 }
 animate();
+
 },{}]},{},[1]);
