@@ -2,7 +2,8 @@
 var scene = new THREE.Scene()
 var raycaster = new THREE.Raycaster();
 var renderer = new THREE.WebGLRenderer(antialaising = true);
-renderer.setSize( window.innerWidth, window.innerHeight);
+// IMPORTANT: The width and height need to account for any padding / border given in the index.
+renderer.setSize( window.innerWidth-20, window.innerHeight-20);
 
 document.body.appendChild( renderer.domElement );
 // Our Javascript will go here.
@@ -406,6 +407,7 @@ var controls = new THREE.OrbitControls( camera, renderer.domElement );
 var gui = new dat.GUI({
     height : 5 * 32 - 1
 });
+gui.domElement.id = 'gui';
 
 function regenerate() {
     planet.regeneratePlanet();
@@ -432,9 +434,6 @@ function regenerate() {
     planet.setTerrainValues( guiParams['lacunarity'], guiParams['persistance'], guiParams['layers'], guiParams['seed'], guiParams['base'], guiParams['min'], guiParams['max']);
     planet.regeneratePlanet();
 }
-
-gui.add(guiParams, 'rotationSpeed').min(0).max(100).step(1);
-gui.add(guiParams, 'poles');
 //gui.add(guiParams, 'lacunarity').min(0).max(10).step(.1);
 //gui.add(guiParams, 'persistance').min(0).max(2).step(.1);
 //gui.add(guiParams, 'layers').min(0).max(15).step(1);
@@ -443,8 +442,6 @@ gui.add(guiParams, 'seed').name("Coordinates");
 //gui.add(guiParams, 'min').min(0.5).max(1).step(.05);
 //gui.add(guiParams, 'max').min(1).max(2).step(.05);
 gui.add(guiParams, 'regenerateFunction').name('Go');
-gui.add(guiParams, 'sunOrbit').min(0).max(5).step(.1).name('sun speed');
-gui.add(guiParams, 'sunDistance').min(0).max(30).step(.1).name('sun distance');
 
 var sphere = new THREE.SphereGeometry( .05, 32, 32 );
 var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
@@ -452,7 +449,9 @@ var playerTracker = new THREE.Mesh( sphere, material );
 
 playerTracker.position.set(1,1,1);
 //scene.add( playerTracker );
-
+var sunDistance = 12;
+var rotationSpeed = 2;
+var orbitSpeed = 1;
 function animate(time) {
     requestAnimationFrame( animate );
 
@@ -464,14 +463,15 @@ function animate(time) {
     //shapes[0].rotation.y += 0.01;
     //cube2.rotation.y += 0.01;
 
-    planet.rotateY(guiParams['rotationSpeed']/1000)
+    planet.rotateY(rotationSpeed/1000)
     //shapes.forEach((face, index) => {
     //    face.rotation.x+=.01;
     //    face.rotation.y+=.01;
     //});
 
     //sun.move(sun.);
-    sun.setPosition(guiParams['sunDistance']*Math.cos(guiParams['sunOrbit']*(time/10000)),0,guiParams['sunDistance']*Math.sin(guiParams['sunOrbit']*(time/10000)));
+    
+    sun.setPosition(sunDistance*Math.cos(orbitSpeed*(time/10000)),0,sunDistance*Math.sin(orbitSpeed*(time/10000)));
 
     renderer.render( scene, camera);
 }
