@@ -5,10 +5,12 @@
   "main": "PerlinPlanets.js",
   "dependencies": {
     "dat.gui": "^0.7.6",
+    "random-seed": "^0.3.0",
+    "requirejs": "^2.3.6",
+    "seedrandom": "^3.0.5",
     "simplex-noise": "^2.4.0",
-    "three": "^0.137.0"
+    "three": "^0.124.0"
   },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
