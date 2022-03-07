@@ -375,7 +375,7 @@ function createSkyBox() {
 //*****************************
 
 
-var light = new THREE.AmbientLight( 0x404040 , 0.5); // soft white light
+var light = new THREE.AmbientLight( 0x404040 , 1); // soft white light
 scene.add( light );
 
 createSkyBox()
