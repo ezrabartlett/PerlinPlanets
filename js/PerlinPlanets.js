@@ -1,3 +1,5 @@
+var randomseed = require('random-seed');
+
 var scene = new THREE.Scene()
 var raycaster = new THREE.Raycaster();
 var renderer = new THREE.WebGLRenderer(antialaising = true);
@@ -16,7 +18,7 @@ class Planet {
         this.terrain = new terrainGenerator( 2, .5, 5, this.seed, 1.3, .95, 1.05);
         this.baseTemp = 70;
         this.generateLayers()
-
+        this.rotationSpeed = 2;
         var geometries = basicSphere(resolution)
         var body = [];
         geometries.forEach((face, index) => {
@@ -25,12 +27,18 @@ class Planet {
         });
 
         this.body = body;
+        this.modulateSurface()
+        this.updateColors();
     }
 
     addToScene() {
         this.body.forEach((face) => {
             scene.add(face)
         });
+    }
+    
+    getPosition() {
+        return this.body[0].position;
     }
 
     modulateSurface() {
@@ -60,7 +68,11 @@ class Planet {
     resetResolution() {
 
     }
-
+    
+    move() {
+        this.rotateY(this.rotationSpeed/1000)
+    }
+    
     regeneratePlanet() {
         this.generateLayers()
         this.modulateSurface();
@@ -84,7 +96,15 @@ class Planet {
             face.rotation.z += value
         })
     } 
-
+    
+    setPosition(x, y, z) {
+        this.body.forEach((face) => {
+            face.position.x = x;
+            face.position.y = y;
+            face.position.z = z;
+        })
+    }
+    
     generateLayers() {
         var continents = {
             terrain: new terrainGenerator( 2, .5, 5, this.seed, 1.5, .9, 1.1),
@@ -201,8 +221,6 @@ class Sun {
 
         this.light = new THREE.PointLight( 0xffffff, 1, 100 );
         this.light.position.set( 0, 0,  7);
-        scene.add(this.light);
-
     }
 
     addToScene() {
@@ -249,8 +267,6 @@ function generateFace(resolution, radius = 1) {
         for(var z = 0; z<resolution; z++){
             var z_percent = z/(resolution-1);
 
-            var rm = Math.random();
-            rm = 1+rm;
             // Push the vertices, based on the position calculations
             // face.vertices.push((new THREE.Vector3(2*x_percent-1, 1,  2*z_percent-1)).normalize());
 
@@ -383,13 +399,11 @@ createSkyBox()
 //***********************************
 
 var planet = new Planet(300, 'williamZakai');
-planet.addToScene();
-planet.modulateSurface();
-planet.updateColors();
+//planet.addToScene();
 
-var sun = new Sun(4,  15);
-sun.setPosition(0, 0, 6);
-sun.addToScene()
+//var sun = new Sun(4,  15);
+//sun.setPosition(0, 0, 6);
+//sun.addToScene()
 
 //***********************************
 //  CAMERA
@@ -397,7 +411,9 @@ sun.addToScene()
 
 var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000);
 //var FPCamera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 3.5;
+camera.position.x = 10.5;
+camera.position.y = 7.5;
+camera.position.z = 12.5;
 //FPCamera.rotation.x = 0//1.5;
 //camera.rotation.z = 1.6;
 var controls = new THREE.OrbitControls( camera, renderer.domElement );
@@ -452,9 +468,85 @@ var playerTracker = new THREE.Mesh( sphere, material );
 playerTracker.position.set(1,1,1);
 //scene.add( playerTracker );
 
+//***********************************
+//*   Solar system
+//***********************************
+
+    
+class SolarSystem {
+    constructor(seed) {
+        this.rand = randomseed.create(seed);
+        this.seed = seed
+        this.generateSun()
+        this.generatePlanets();
+    }
+    
+    generateSun() {
+        this.sun = new Sun(3,  15);
+        this.sun.setPosition(0, 0, 0);
+    }
+    
+    generatePlanets() {
+        this.planets = [];
+        for(var i = 0; i<6; i++){
+            if(this.rand.random()>=0.5){
+                var planet = new Planet(200, 'williamZakai');
+                planet.setPosition(0,0,6*i+12);
+                this.planets.push(planet);
+            }
+        }
+    }
+    
+    addToScene() {
+        this.sun.addToScene()
+        this.planets.forEach((planet) => {
+            planet.addToScene();
+        });
+    }
+    
+    move() {
+        this.planets.forEach((planet) => {
+            planet.move();
+        });
+    }
+}
+
+//***********************************
+//*   Mouse Click
+//***********************************
+var raycaster = new THREE.Raycaster(); // create once
+var mouse = new THREE.Vector2(); // create once
+
+document.addEventListener("click", event => {
+    mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+
+    raycaster.setFromCamera( mouse, camera );
+
+    var intersects = raycaster.intersectObjects( scene.children, false );
+    
+	console.log(intersects[0]);
+    controls.target.set(intersects[0].point.x, intersects[0].point.y, intersects[0].point.z);
+    controls.update();
+    
+});
+
+//***********************************
+//*   Setup Solar System
+//***********************************
+
+var SS = new SolarSystem("Seed");
+SS.addToScene()
+
 function animate(time) {
     requestAnimationFrame( animate );
-
+    SS.move()
+    //targetPosition = SS.planets[0].getPosition()
+    //controls.target.set(targetPosition.x, targetPosition.y, targetPosition.z);
+    //controls.update();
+    
+    //const intersects = raycaster.intersectObjects(scene.children);
+    //console.log(intersects);
     //var playerPosition = new THREE.Vector3(camera.position.x, camera.position.y, camera.position.z).normalize();
     //playerPosition.multiplyScalar(planet.terrain.get3DPoint(playerPosition.x,playerPosition.y,playerPosition.z));
     //raycaster.set(new THREE.Vector3(0,0,0), playerPosition.normalize());
@@ -463,15 +555,18 @@ function animate(time) {
     //shapes[0].rotation.y += 0.01;
     //cube2.rotation.y += 0.01;
 
-    planet.rotateY(guiParams['rotationSpeed']/1000)
+    //planet.move()
     //shapes.forEach((face, index) => {
     //    face.rotation.x+=.01;
     //    face.rotation.y+=.01;
     //});
 
     //sun.move(sun.);
-    sun.setPosition(guiParams['sunDistance']*Math.cos(guiParams['sunOrbit']*(time/10000)),0,guiParams['sunDistance']*Math.sin(guiParams['sunOrbit']*(time/10000)));
+    //sun.setPosition(guiParams['sunDistance']*Math.cos(guiParams['sunOrbit']*(time/10000)),0,guiParams['sunDistance']*Math.sin(guiParams['sunOrbit']*(time/10000)));
 
     renderer.render( scene, camera);
 }
 animate();
+
+
+
