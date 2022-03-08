@@ -67,6 +67,7 @@ class Planet {
         this.generateLayers()
         this.modulateSurface();
         this.updateColors();
+        logSystemGeneration(this.seed);
     }
 
     rotateX(value) {
