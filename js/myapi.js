@@ -11,6 +11,8 @@ const doCurl = async (action) => {
     Http.send();
 }
 
+doCurl('logVisit');
+
 const logSiteVisit = function () {
     doCurl('logVisit');
 }
